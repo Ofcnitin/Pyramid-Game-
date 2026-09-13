@@ -1,75 +1,477 @@
 # Pyramid Game
 
-A production-oriented multiplayer social strategy game based on the supplied UI/brand references.
+> **RANKS REVEAL PEOPLE.**
 
-## Stack
-- Next.js App Router + TypeScript
-- Supabase Auth + PostgreSQL + Realtime
-- Tailwind CSS v4
-- Lucide icons
+A multiplayer social-ranking game inspired by the concept of the K-drama *Pyramid Game*.
 
-## Required security model
-1. Authentication is mandatory for every gameplay route.
-2. Every room has a password; the room code alone is insufficient.
-3. Room passwords are stored as bcrypt hashes via PostgreSQL `crypt` and never returned to the client.
-4. Raw vote rows have no SELECT policy, so clients cannot inspect who voted for whom.
-5. Vote submission is performed through a server-side SECURITY DEFINER function that validates membership, deadline, exact vote count, target membership, and duplicates.
-6. Rankings are generated server-side; the browser cannot authoritatively set rank/score.
+I originally started this as a fun experiment after watching the series and becoming interested in the idea behind its voting and ranking system. What looked simple from the outside turned out to involve authentication, secure rooms, anonymous voting, game-state management, ranking algorithms, database security, and a lot more.
 
-## Setup
-1. Create a Supabase project.
-2. Run `supabase/schema.sql` in the Supabase SQL editor.
-3. Copy `.env.example` to `.env.local` and fill in your Supabase URL + anon key.
-4. Run `npm install`.
-5. Run `npm run dev`.
+So I decided to build my own practical version.
 
+## 🎮 Live Demo
 
-## GitHub + Cloudflare deployment
+**https://pyramid-game.ofcnitin.workers.dev**
 
-This project is a dynamic Next.js application, so deploy it to **Cloudflare Workers**, not Cloudflare Pages Static HTML Export. Cloudflare's current Workers flow can automatically detect an existing Next.js repository and configure the Cloudflare adapter during setup. Cloudflare currently recommends its `vinext` path for new Next.js Workers deployments; the app does not need a source-code migration just to be connected to GitHub and prepared for that setup.
+---
 
-### 1. Push to GitHub
+## About
 
-Create a private or public GitHub repository and push this project. **Do not commit `.env.local` or any Supabase service-role key.**
+Pyramid Game is a private multiplayer game where players join a room, vote anonymously, and watch the social hierarchy form from the collective voting results.
 
-### 2. Connect the repository to Cloudflare
+The goal wasn't to simply recreate a UI from the series.
 
-In Cloudflare, use **Workers & Pages → Create application → Workers** and connect the GitHub repository. Let Cloudflare's automatic framework configuration detect Next.js. Cloudflare Workers Builds can run the build and deploy commands from the repository.
+The goal was to take the core idea and turn it into a **real, playable web application** with proper authentication, database-backed game state, secure voting, and server-authoritative results.
 
-### 3. Add build environment variables
-
-Set these in the Cloudflare Worker/Workers Build environment:
+### Core flow
 
 ```text
+Create / Join Room
+        ↓
+   Wait for Players
+        ↓
+     Start Game
+        ↓
+   Timed Voting
+        ↓
+ Anonymous Votes
+        ↓
+ Server-side Results
+        ↓
+  Dynamic Grading
+        ↓
+   Pyramid / Ranking
+        ↓
+    Next Round
+
+
+---
+
+✨ Features
+
+🔐 Private Multiplayer Rooms
+
+Every player needs an authenticated account.
+
+Rooms require both a room code and password.
+
+Room passwords are securely hashed.
+
+Players can only access rooms they have joined.
+
+
+🗳️ Anonymous Voting
+
+Players vote for other players during a timed round.
+
+Players cannot see who voted for them.
+
+Raw vote records are not exposed to the client.
+
+Duplicate submissions are prevented.
+
+Self-voting can be disabled.
+
+
+⏱️ Timed Rounds
+
+Each round has a server-controlled voting deadline.
+
+Voting automatically becomes invalid after the deadline.
+
+Clients cannot extend the voting timer.
+
+
+📊 Dynamic Rankings
+
+The hierarchy is generated from the actual voting distribution of the group.
+
+Instead of using fixed rules such as:
+
+80+ votes = A
+60+ votes = B
+40+ votes = C
+
+the system evaluates the group's voting pattern and determines the relative position of each player.
+
+Grades range from:
+
+A → B → C → D → E → F
+
+with multiple players able to share the same grade.
+
+🏆 Leaderboard
+
+Players can see their current position, points, rank changes, and game progress without being given access to private vote information.
+
+👤 Player Profiles
+
+Profiles track information such as:
+
+Points
+
+Current rank
+
+Current game
+
+Round history
+
+Recorded results
+
+
+📱 Responsive UI
+
+The interface is designed to work across:
+
+Desktop
+
+Tablet
+
+Mobile
+
+
+The mobile experience uses a dedicated responsive layout rather than simply shrinking the desktop interface.
+
+
+---
+
+🛡️ Security
+
+Security was one of the most important parts of the project.
+
+The browser is not trusted with authoritative game operations.
+
+Authentication
+
+Gameplay routes require an authenticated Supabase session.
+
+Room Security
+
+A room cannot be joined using the room code alone.
+
+The player must provide:
+
+Authenticated account
+        +
+Room code
+        +
+Room password
+
+Passwords are stored as bcrypt hashes and are never returned to the client.
+
+Anonymous Votes
+
+The votes table intentionally has no client read policy.
+
+Players can submit votes through a validated server-side function, but they cannot query the underlying vote records to discover who voted for whom.
+
+Server-authoritative game logic
+
+Important operations are handled through PostgreSQL functions rather than trusting client-side state:
+
+Creating games
+
+Joining games
+
+Submitting votes
+
+Starting games
+
+Starting rounds
+
+Closing rounds
+
+Generating rankings
+
+
+The database validates things such as:
+
+Authentication
+
+Room membership
+
+Room capacity
+
+Vote count
+
+Duplicate votes
+
+Target membership
+
+Self-voting rules
+
+Voting deadlines
+
+Host permissions
+
+
+Row Level Security
+
+Supabase Row Level Security is enabled on the game's core tables.
+
+The intention is simple:
+
+> The client can request actions, but the database decides whether those actions are allowed.
+
+
+
+
+---
+
+🧠 What I Learned
+
+This project started as something I wanted to build because I found the concept interesting.
+
+It ended up becoming a practical way to apply things I had previously only studied theoretically.
+
+While building it, I worked with concepts such as:
+
+Authentication
+
+PostgreSQL
+
+Database relationships
+
+Row Level Security
+
+Server-side validation
+
+Secure RPCs
+
+Password hashing
+
+Anonymous data handling
+
+Voting algorithms
+
+Ranking systems
+
+Game-state management
+
+Timed rounds
+
+Responsive UI
+
+Cloud deployment
+
+
+One of the biggest lessons was that a feature that looks simple from the outside can become surprisingly complex when you actually have to make it secure, consistent and reliable.
+
+
+---
+
+🏗️ Tech Stack
+
+Frontend
+
+Next.js
+
+React
+
+TypeScript
+
+Tailwind CSS
+
+Lucide React
+
+
+Backend
+
+Supabase
+
+PostgreSQL
+
+Supabase Auth
+
+PostgreSQL RPC functions
+
+Row Level Security
+
+
+Deployment
+
+Cloudflare Workers
+
+
+Development
+
+Git
+
+GitHub
+
+TypeScript
+
+
+
+---
+
+📁 Project Structure
+
+pyramid-game/
+│
+├── app/
+│   ├── auth/
+│   ├── create/
+│   ├── dashboard/
+│   ├── join/
+│   ├── leaderboard/
+│   ├── messages/
+│   ├── profile/
+│   ├── pyramid/
+│   ├── room/
+│   ├── settings/
+│   └── vote/
+│
+├── components/
+│   ├── AppShell.tsx
+│   ├── Dashboard.tsx
+│   ├── Logo.tsx
+│   └── Pyramid.tsx
+│
+├── lib/
+│   ├── mock.ts
+│   ├── supabase.ts
+│   └── types.ts
+│
+├── public/
+│   ├── logo.svg
+│   └── brand-pyramid.svg
+│
+├── supabase/
+│   └── schema.sql
+│
+├── middleware.ts
+├── next.config.ts
+├── package.json
+└── README.md
+
+
+---
+
+🚀 Running Locally
+
+1. Clone the repository
+
+git clone https://github.com/Ofcnitin/Pyramid-Game-.git
+cd Pyramid-Game-
+
+2. Install dependencies
+
+npm install
+
+3. Create environment variables
+
+Create .env.local:
+
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_publishable_key
 
-The Supabase **anon/publishable** key is intended for browser use. Never put the Supabase `service_role` key in `NEXT_PUBLIC_*` variables or in the repository.
+Never commit .env.local or a Supabase service-role/secret key.
 
-### 4. Configure Supabase Auth URLs
+4. Configure Supabase
 
-After Cloudflare gives the Worker its production URL, add that URL to Supabase Auth's Site URL / redirect configuration. Also add any preview URL you intend to use for authentication testing.
+Create a Supabase project and run:
 
-### 5. Run the database schema
+supabase/schema.sql
 
-Before inviting players, execute `supabase/schema.sql` in the Supabase SQL editor. This creates the RLS policies and server-side game RPCs.
+inside the Supabase SQL Editor.
 
-### Important
+This creates the database structure, security policies, and server-side game functions.
 
-Use **Cloudflare Workers**, not the Cloudflare Pages `Next.js (Static HTML Export)` preset. This application requires authenticated middleware and dynamic game state.
+5. Start the development server
 
-## Important production hardening
-- Configure Supabase Auth email confirmation and password reset.
-- Add rate limiting/WAF around auth and RPC calls.
-- Add a trusted server/cron worker to close expired rounds automatically. `close_round` itself rejects early calls, so clients cannot close a round prematurely.
-- Add Realtime subscriptions for game/round state, with RLS preserved.
-- Add moderation/reporting before public matchmaking.
+npm run dev
 
-## Security audit performed during implementation
-The first pass exposed several privilege-escalation paths and they were removed before packaging:
-- Direct client inserts into `game_players` could bypass the room password -> removed; joining is RPC-only.
-- Direct client inserts into `votes` could bypass the vote count/deadline -> removed; voting is RPC-only.
-- Exposing `password_hash` on `games` would leak password material -> moved to `game_secrets`, which has no client SELECT policy.
-- Direct game INSERT/UPDATE could bypass creation rules -> removed; game mutation is RPC-only.
-- Round closing was callable by any player -> restricted to the host after the deadline.
+Then open:
+
+http://localhost:3000
+
+
+---
+
+☁️ Deployment
+
+The production version is deployed using:
+
+GitHub
+   ↓
+Cloudflare Workers
+   ↓
+Next.js Application
+   ↓
+Supabase
+ ┌───────────────┐
+ │ Authentication│
+ │ PostgreSQL    │
+ │ RLS           │
+ │ Game RPCs     │
+ └───────────────┘
+
+Production:
+
+https://pyramid-game.ofcnitin.workers.dev
+
+
+---
+
+⚠️ Project Status
+
+This is a personal project and an ongoing experiment.
+
+The main gameplay architecture is functional, but there are still areas that can be improved, including:
+
+More extensive multiplayer testing
+
+Automatic round closing
+
+Realtime game-state updates
+
+More robust rate limiting
+
+Additional moderation features
+
+Further mobile UI refinement
+
+More advanced game statistics
+
+
+The project is intentionally being developed incrementally rather than treating the first working version as the final version.
+
+
+---
+
+🎯 Why I Built It
+
+I didn't build Pyramid Game because I thought I had found the next big social platform.
+
+I built it because I watched something interesting and thought:
+
+> "Could I actually build this?"
+
+
+
+That question turned a simple idea into a project where theoretical concepts became actual working systems.
+
+And that's probably the most valuable part of the project.
+
+
+---
+
+📜 Inspiration
+
+The project was inspired by the fictional game concept presented in the K-drama Pyramid Game.
+
+This is an independent fan-inspired implementation and is not affiliated with, endorsed by, or connected to the creators, production company, or rights holders of the series.
+
+The implementation, branding, UI, database architecture, and gameplay system in this repository were developed independently.
+
+
+---
+
+📄 License
+
+This project is provided for personal, educational, and experimental use.
+
+See the repository for the current licensing and project terms.
+
+
+---
