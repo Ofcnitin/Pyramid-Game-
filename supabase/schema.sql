@@ -148,12 +148,12 @@ as $$ declare g public.games; code text; begin
   if char_length(p_password)<8 then raise exception 'Room password must be at least 8 characters'; end if;
   perform public.ensure_profile();
   loop
-    code := 'PYR-' || upper(substr(encode(gen_random_bytes(4),'hex'),1,6));
+    code := 'PYR-' || upper(substr( encode(extensions.gen_random_bytes(4),'hex'),1,6));
     exit when not exists(select 1 from public.games where room_code=code);
   end loop;
   insert into public.games(name,room_code,host_id,max_players,total_rounds,voting_seconds,votes_per_player)
   values(p_name,code,auth.uid(),p_max_players,p_total_rounds,p_voting_seconds,p_votes_per_player) returning * into g;
-  insert into public.game_secrets(game_id,password_hash) values(g.id,crypt(p_password,gen_salt('bf')));
+  insert into public.game_secrets(game_id,password_hash) values(extensions.crypt(p_password,extensions.gen_salt('bf')) );
   insert into public.game_players(game_id,user_id) values(g.id,auth.uid());
   return jsonb_build_object('game_id',g.id,'room_code',g.room_code);
 end $$;
