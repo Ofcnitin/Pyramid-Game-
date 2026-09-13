@@ -1284,3 +1284,239 @@ p{
     font-size:23px
   }
 }
+
+/* ============================================================
+   MOBILE HARDENING — PASS 1
+   Keeps desktop layout unchanged.
+   ============================================================ */
+
+html,
+body{
+  max-width:100%;
+  overflow-x:hidden
+}
+
+img,
+svg,
+video,
+canvas{
+  max-width:100%
+}
+
+@media(max-width:650px){
+  html{
+    width:100%;
+    overflow-x:hidden
+  }
+
+  body{
+    width:100%;
+    min-width:0;
+    overflow-x:hidden;
+    -webkit-text-size-adjust:100%;
+    padding-bottom:env(safe-area-inset-bottom)
+  }
+
+  button,
+  .btn,
+  .mobile-nav button{
+    min-height:44px
+  }
+
+  .main{
+    width:100%;
+    min-width:0;
+    padding-left:14px;
+    padding-right:14px;
+    padding-bottom:calc(96px + env(safe-area-inset-bottom))
+  }
+
+  .topbar{
+    min-width:0;
+    gap:14px;
+    flex-wrap:wrap
+  }
+
+  .topbar > div:first-child{
+    min-width:0;
+    flex:1 1 220px
+  }
+
+  .top-actions{
+    flex:0 0 auto
+  }
+
+  .page-title{
+    overflow-wrap:anywhere
+  }
+
+  .sub,
+  .small,
+  .notice{
+    overflow-wrap:anywhere
+  }
+
+  .card{
+    min-width:0;
+    max-width:100%
+  }
+
+  .actions{
+    width:100%;
+    gap:8px
+  }
+
+  .actions .btn{
+    flex:1 1 160px
+  }
+
+  .grid2,
+  .grid3,
+  .grid4{
+    width:100%;
+    min-width:0
+  }
+
+  .countdown,
+  .quote,
+  .stat,
+  .setting{
+    min-width:0
+  }
+
+  .timer{
+    max-width:100%;
+    overflow:hidden;
+    font-size:30px
+  }
+
+  .timer-label{
+    word-spacing:8px;
+    white-space:normal
+  }
+
+  .mobile-nav{
+    bottom:calc(8px + env(safe-area-inset-bottom));
+    padding:6px;
+    min-height:58px
+  }
+
+  .mobile-nav button{
+    flex:1;
+    display:grid;
+    place-items:center;
+    min-width:44px;
+    border-radius:10px
+  }
+
+  .field input{
+    width:100%;
+    min-width:0;
+    font-size:16px
+  }
+
+  .table-wrap{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch
+  }
+
+  .table-wrap .table{
+    min-width:560px
+  }
+
+  /* Common inline card padding from existing pages. */
+  .main > .card{
+    padding:18px !important
+  }
+
+  /* Keep headings and action rows comfortable on narrow screens. */
+  .main > .card .topbar{
+    align-items:flex-start
+  }
+
+  .main > .card .topbar .actions{
+    width:100%
+  }
+
+  .main > .card .topbar .actions .btn{
+    width:100%
+  }
+
+  /* Auth form controls should never trigger browser zoom or overflow. */
+  .auth-panel{
+    min-width:0;
+    width:100%;
+    padding:28px 18px
+  }
+
+  .auth-form{
+    min-width:0;
+    max-width:100%
+  }
+
+  .auth-form .btn{
+    width:100%
+  }
+
+  /* Landing page: preserve the desktop composition but make it fit phones. */
+  .landing{
+    width:100%;
+    min-width:0;
+    overflow:hidden
+  }
+
+  .landing-nav{
+    min-width:0
+  }
+
+  .landing-nav .logo{
+    width:min(150px,42vw)
+  }
+
+  .hero-title{
+    max-width:100%;
+    font-size:clamp(46px,14vw,62px);
+    overflow-wrap:anywhere
+  }
+
+  .hero-copy{
+    max-width:100%
+  }
+
+  .hero-art img{
+    width:min(100%,430px)
+  }
+
+  .steps{
+    gap:10px
+  }
+
+  /* Pyramid gets a little more breathing room without changing its structure. */
+  .pyramid-card-shell{
+    width:100%;
+    min-width:0
+  }
+
+  .pyramid-board{
+    width:100%;
+    min-width:0
+  }
+
+  .pyramid-board-header > div:first-child{
+    min-width:0
+  }
+
+  .pyramid-grade-players,
+  .pyramid-player{
+    min-width:0
+  }
+
+  .pyramid-player-name{
+    max-width:100%
+  }
+
+  .pyramid-board-footer span{
+    overflow-wrap:anywhere
+  }
+}
