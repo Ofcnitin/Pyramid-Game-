@@ -166,7 +166,7 @@ as $$ declare g public.games; count_players int; begin
   insert into public.room_join_attempts(user_id,room_code) values(auth.uid(),upper(trim(p_room_code)));
   select * into g from public.games where room_code=upper(trim(p_room_code)) and status='waiting';
   if not found then raise exception 'Invalid room credentials'; end if;
-  if not exists(select 1 from public.game_secrets s where s.game_id=g.id and s.password_hash=crypt(p_password,s.password_hash)) then raise exception 'Invalid room credentials'; end if;
+  if not exists(select 1 from public.game_secrets s where s.game_id=g.id and s.password_hash=extensions.crypt(p_password,s.password_hash)) then raise exception 'Invalid room credentials'; end if;
   select count(*) into count_players from public.game_players where game_id=g.id;
   if count_players >= g.max_players then raise exception 'Room is full'; end if;
   perform public.ensure_profile();
