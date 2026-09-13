@@ -1,0 +1,2 @@
+import AppShell from '@/components/AppShell'; import {MessageSquare} from 'lucide-react'; export default function Page(){return <AppShell><div className="topbar"><div><h1 className="page-title">Messages</h1><div className="sub">Game announcements and system notices.</div></div></div><div className="card empty"><MessageSquare size={30} style={{margin:'0 auto 12px'}}/><h2 className="serif">No new messages</h2><p>Important game events will appear here.</p></div></AppShell>}
+
