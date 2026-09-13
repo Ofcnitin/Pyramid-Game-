@@ -1,1 +1,2 @@
 
+import AppShell from '@/components/AppShell'; import Pyramid from '@/components/Pyramid'; import {players,game} from '@/lib/mock'; export default function Page(){return <AppShell><div className="topbar"><div><h1 className="page-title">Current Pyramid</h1><div className="sub">Round {game.round} · {game.maxPlayers} player capacity</div></div><span className="round-badge">Live</span></div><div className="card"><Pyramid players={players}/></div></AppShell>}
