@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Send, RefreshCw } from 'lucide-react';
 import AppShell from '@/components/AppShell';
 import { getSupabase } from '@/lib/supabase';
@@ -35,8 +35,12 @@ export default function VotePage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [left, setLeft] = useState('—');
   const [submitted, setSubmitted] = useState(false);
+  const [expired, setExpired] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // Prevent multiple close_round calls when the timer reaches zero.
+  const closingRound = useRef<string | null>(null);
 
   async function load() {
     const s = getSupabase();
@@ -107,6 +111,10 @@ export default function VotePage() {
 
     setRound(r);
 
+    if (r.status !== 'voting') {
+      setExpired(true);
+    }
+
     const {
       data: p,
       error: pe,
@@ -123,12 +131,60 @@ export default function VotePage() {
     setPlayers(p || []);
   }
 
+  async function closeExpiredRound(roundId: string) {
+    const s = getSupabase();
+
+    if (!s) {
+      setError('Supabase is not configured.');
+      return;
+    }
+
+    // Never call close_round more than once for the same round
+    // from this browser.
+    if (closingRound.current === roundId) {
+      return;
+    }
+
+    closingRound.current = roundId;
+    setBusy(true);
+    setError('');
+
+    const { error: closeError } = await s.rpc('close_round', {
+      p_round_id: roundId,
+    });
+
+    if (closeError) {
+      // If another player/browser already closed it,
+      // simply refresh the current state.
+      if (
+        closeError.message.toLowerCase().includes('already') ||
+        closeError.message.toLowerCase().includes('results')
+      ) {
+        await load();
+      } else {
+        setError(closeError.message);
+        closingRound.current = null;
+      }
+
+      setBusy(false);
+      return;
+    }
+
+    setExpired(true);
+    setBusy(false);
+
+    // The rankings now exist.
+    router.push('/pyramid');
+  }
+
   useEffect(() => {
     load();
   }, []);
 
   useEffect(() => {
-    if (!round) return;
+    if (!round || round.status !== 'voting') {
+      return;
+    }
 
     const tick = () => {
       const d = Math.max(
@@ -145,7 +201,7 @@ export default function VotePage() {
       );
 
       if (d === 0) {
-        load();
+        closeExpiredRound(round.id);
       }
     };
 
@@ -207,13 +263,13 @@ export default function VotePage() {
       return;
     }
 
-    const { error } = await s.rpc('submit_votes', {
+    const { error: submitError } = await s.rpc('submit_votes', {
       p_round_id: round.id,
       p_target_ids: selected,
     });
 
-    if (error) {
-      setError(error.message);
+    if (submitError) {
+      setError(submitError.message);
     } else {
       setSubmitted(true);
     }
@@ -265,6 +321,23 @@ export default function VotePage() {
             View Pyramid
           </button>
         </div>
+      ) : expired ? (
+        <div className="card empty">
+          <h2 className="serif">
+            Round complete.
+          </h2>
+
+          <p>
+            Voting has ended and the hierarchy has been calculated.
+          </p>
+
+          <button
+            className="btn light"
+            onClick={() => router.push('/pyramid')}
+          >
+            View Pyramid
+          </button>
+        </div>
       ) : (
         <>
           <div className="vote-grid">
@@ -276,6 +349,7 @@ export default function VotePage() {
                   (selected.includes(p.id) ? 'selected' : '')
                 }
                 onClick={() => toggle(p.id)}
+                disabled={busy}
               >
                 <div className="avatar">
                   {i + 1}
@@ -352,4 +426,4 @@ export default function VotePage() {
       )}
     </AppShell>
   );
-        }
+}
